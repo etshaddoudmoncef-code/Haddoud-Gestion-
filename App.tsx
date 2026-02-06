@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   ProductionRecord, PurchaseRecord, StockOutRecord, 
   PrestationProdRecord, PrestationEtuvageRecord, 
@@ -16,7 +16,7 @@ import LotTraceability from './components/LotTraceability.tsx';
 import PrestationProdModule from './components/PrestationProdModule.tsx';
 import PrestationEtuvageModule from './components/PrestationEtuvageModule.tsx';
 
-export const generateId = () => Date.now().toString(36) + Math.random().toString(36).substring(2);
+export const generateId = () => Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
 
 const DEFAULT_MASTER: MasterData = {
   products: ['Tomate Roma', 'Tomate Cerise', 'Poivron'],
@@ -28,46 +28,57 @@ const DEFAULT_MASTER: MasterData = {
 };
 
 const App: React.FC = () => {
-  const [currentUser, setCurrentUser] = useState<User | null>(() => {
-    const saved = localStorage.getItem('prod_user');
-    return saved ? JSON.parse(saved) : null;
-  });
+  // Chargement sécurisé des données
+  const getStored = (key: string, fallback: any) => {
+    try {
+      const val = localStorage.getItem(key);
+      return val ? JSON.parse(val) : fallback;
+    } catch (e) {
+      console.error(`Erreur lecture ${key}`, e);
+      return fallback;
+    }
+  };
 
+  const [currentUser, setCurrentUser] = useState<User | null>(() => getStored('prod_user', null));
   const [activeTab, setActiveTab] = useState<MainTab>('production');
   const [prodSub, setProdSub] = useState<'stats' | 'form' | 'journal' | 'lots'>('stats');
   const [editing, setEditing] = useState<any>(null);
 
-  // States persistants (Harmonisation des clés avec prod_)
-  const [records, setRecords] = useState<ProductionRecord[]>(() => JSON.parse(localStorage.getItem('prod_records') || '[]'));
-  const [prestationProd, setPrestationProd] = useState<PrestationProdRecord[]>(() => JSON.parse(localStorage.getItem('prod_prestation_prod') || '[]'));
-  const [prestationEtuvage, setPrestationEtuvage] = useState<PrestationEtuvageRecord[]>(() => JSON.parse(localStorage.getItem('prod_prestation_etuvage') || '[]'));
-  const [users, setUsers] = useState<User[]>(() => JSON.parse(localStorage.getItem('prod_users') || '[]'));
-  const [purchases, setPurchases] = useState<PurchaseRecord[]>(() => JSON.parse(localStorage.getItem('prod_purchases') || '[]'));
-  const [stockOuts, setStockOuts] = useState<StockOutRecord[]>(() => JSON.parse(localStorage.getItem('prod_stock_outs') || '[]'));
-  const [master, setMaster] = useState<MasterData>(() => JSON.parse(localStorage.getItem('prod_master_data') || JSON.stringify(DEFAULT_MASTER)));
+  // États de l'application
+  const [records, setRecords] = useState<ProductionRecord[]>(() => getStored('prod_records', []));
+  const [prestationProd, setPrestationProd] = useState<PrestationProdRecord[]>(() => getStored('prod_prestation_prod', []));
+  const [prestationEtuvage, setPrestationEtuvage] = useState<PrestationEtuvageRecord[]>(() => getStored('prod_prestation_etuvage', []));
+  const [users, setUsers] = useState<User[]>(() => getStored('prod_users', []));
+  const [purchases, setPurchases] = useState<PurchaseRecord[]>(() => getStored('prod_purchases', []));
+  const [stockOuts, setStockOuts] = useState<StockOutRecord[]>(() => getStored('prod_stock_outs', []));
+  const [master, setMaster] = useState<MasterData>(() => getStored('prod_master_data', DEFAULT_MASTER));
 
+  // Persistance automatique
   useEffect(() => {
-    localStorage.setItem('prod_records', JSON.stringify(records));
-    localStorage.setItem('prod_prestation_prod', JSON.stringify(prestationProd));
-    localStorage.setItem('prod_prestation_etuvage', JSON.stringify(prestationEtuvage));
-    localStorage.setItem('prod_users', JSON.stringify(users));
-    localStorage.setItem('prod_purchases', JSON.stringify(purchases));
-    localStorage.setItem('prod_stock_outs', JSON.stringify(stockOuts));
-    localStorage.setItem('prod_master_data', JSON.stringify(master));
-    if (currentUser) localStorage.setItem('prod_user', JSON.stringify(currentUser));
+    const save = (key: string, val: any) => localStorage.setItem(key, JSON.stringify(val));
+    save('prod_records', records);
+    save('prod_prestation_prod', prestationProd);
+    save('prod_prestation_etuvage', prestationEtuvage);
+    save('prod_users', users);
+    save('prod_purchases', purchases);
+    save('prod_stock_outs', stockOuts);
+    save('prod_master_data', master);
+    if (currentUser) save('prod_user', currentUser);
     else localStorage.removeItem('prod_user');
   }, [records, prestationProd, prestationEtuvage, users, purchases, stockOuts, master, currentUser]);
 
-  const isAdmin = currentUser?.role === 'ADMIN';
+  const handleLogout = useCallback(() => setCurrentUser(null), []);
 
   if (!currentUser) return <Login onLogin={setCurrentUser} existingUsers={users} onRegisterAdmin={(u) => { setUsers([...users, u]); setCurrentUser(u); }} />;
+
+  const isAdmin = currentUser.role === 'ADMIN';
 
   const renderTabContent = () => {
     switch(activeTab) {
       case 'production':
         return (
           <div className="space-y-6">
-            <div className="flex bg-white p-1 rounded-2xl shadow-sm border border-slate-200 sticky top-[72px] lg:top-4 z-40 overflow-x-auto no-scrollbar">
+            <div className="flex bg-white p-1 rounded-2xl shadow-sm border border-slate-200 sticky top-0 z-40 overflow-x-auto no-scrollbar">
               {['stats', 'form', 'journal', 'lots'].map(t => (
                 <button 
                   key={t} onClick={() => { setProdSub(t as any); if(t !== 'form') setEditing(null); }}
@@ -119,7 +130,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <Layout activeTab={activeTab} onTabChange={setActiveTab} user={currentUser} onLogout={() => setCurrentUser(null)}>
+    <Layout activeTab={activeTab} onTabChange={setActiveTab} user={currentUser} onLogout={handleLogout}>
       {renderTabContent()}
     </Layout>
   );
