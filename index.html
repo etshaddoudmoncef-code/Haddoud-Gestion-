@@ -12,20 +12,18 @@
   
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    // Configuration globale et résilience
+    // Initialisation et capture d'erreurs globale pour Android
     window.process = { env: { API_KEY: "" } };
     
-    // Capturer les erreurs de chargement de modules
-    window.addEventListener('error', function(e) {
-      if (e.target.tagName === 'SCRIPT') {
-        console.error("Erreur de chargement script:", e.target.src);
-        const errDiv = document.getElementById('debug-error');
-        if (errDiv) {
-          errDiv.style.display = 'block';
-          errDiv.innerHTML = "<b>Erreur de bibliothèque :</b> Impossible de charger les composants essentiels. Vérifiez votre connexion.";
-        }
+    window.onerror = function(msg, url, line) {
+      console.error("Erreur détectée:", msg, "Ligne:", line);
+      const debugDiv = document.getElementById('debug-error');
+      if (debugDiv) {
+        debugDiv.style.display = 'block';
+        debugDiv.innerHTML = "<b>Démarrage interrompu :</b> " + msg + " (Ligne " + line + ")";
       }
-    }, true);
+      return false;
+    };
   </script>
 
   <style>
@@ -44,7 +42,7 @@
     .loader { width: 32px; height: 32px; border: 4px solid #e2e8f0; border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; }
   </style>
 
-  <!-- IMPORTMAP UNIQUE ET STABLE (React 19.0.0 partout) -->
+  <!-- IMPORTMAP FIXÉ : Une seule version de React (19.0.0) pour éviter tout conflit -->
   <script type="importmap">
 {
   "imports": {
@@ -68,12 +66,11 @@
       <div class="loader"></div>
       <div>
         <h1 class="text-lg font-black text-slate-900 uppercase tracking-tighter">Ets Haddoud Moncef</h1>
-        <p class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mt-2">Démarrage haute compatibilité...</p>
+        <p class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mt-2">Initialisation sécurisée...</p>
       </div>
       <div id="debug-error" style="display:none; font-family:monospace; font-size:11px; color:#991b1b; padding:20px; background:#fef2f2; border:1px solid #fee2e2; border-radius:16px; max-width:100%;"></div>
     </div>
   </div>
-  <!-- Chargement du module principal -->
   <script type="module" src="./index.tsx"></script>
 </body>
 </html>

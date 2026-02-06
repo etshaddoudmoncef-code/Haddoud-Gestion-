@@ -3,25 +3,29 @@ import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 
 /**
- * Initialisation simplifiée pour éviter les erreurs de modules sur Android WebView.
+ * Point d'entrée robuste. 
+ * On capture le rendu pour éviter les blocages silencieux sur Android.
  */
-const rootElement = document.getElementById('root');
+const startApp = () => {
+  const container = document.getElementById('root');
+  if (!container) return;
 
-if (rootElement) {
   try {
-    const root = createRoot(rootElement);
+    const root = createRoot(container);
     root.render(
       <React.StrictMode>
         <App />
       </React.StrictMode>
     );
-    console.info("Application initialisée.");
+    console.log("Système de gestion démarré.");
   } catch (err) {
-    console.error("Échec du rendu React:", err);
+    console.error("Erreur au montage React:", err);
     const debug = document.getElementById('debug-error');
     if (debug) {
       debug.style.display = 'block';
-      debug.innerHTML = "<b>Erreur de rendu :</b> Le moteur JS n'a pas pu démarrer l'application.";
+      debug.innerHTML = "<b>Échec du rendu :</b> Une erreur système empêche l'affichage.";
     }
   }
-}
+};
+
+startApp();
