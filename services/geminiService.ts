@@ -1,11 +1,12 @@
+
 import { GoogleGenAI } from "@google/genai";
 import { ProductionRecord } from "../types.ts";
 
 export const analyzeProductionData = async (records: ProductionRecord[]) => {
   if (records.length === 0) return "Aucune donnée disponible pour l'analyse.";
 
-  // Initialisation à chaque appel pour garantir la récupération de la clé si nécessaire
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || "" });
+  // Use recommended initialization with process.env.API_KEY
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   const summary = records.slice(-10).map(r => 
     `- Lot ${r.lotNumber}: ${r.totalWeightKg}kg produit par ${r.employeeCount} employés, ${r.wasteKg}kg de pertes.`
@@ -18,7 +19,7 @@ export const analyzeProductionData = async (records: ProductionRecord[]) => {
       config: { temperature: 0.7 }
     });
 
-    // Utilisation stricte de la propriété .text (et non de la méthode .text())
+    // Use .text property directly as per guidelines
     return response.text || "Analyse indisponible.";
   } catch (err) {
     console.error("Gemini Error:", err);

@@ -1,46 +1,78 @@
-export type UserRole = 'ADMIN' | 'OPERATOR';
+
 export type MainTab = 'production' | 'prestation_prod' | 'prestation_etuvage' | 'stock' | 'insights' | 'management';
 
 export interface User {
   id: string;
   name: string;
   username: string;
-  password: string;
-  role: UserRole;
+  password?: string;
+  role: 'ADMIN' | 'OPERATOR';
   createdAt: number;
   allowedTabs: MainTab[];
 }
 
+export interface ProductionRecord {
+  id: string;
+  date: string;
+  lotNumber: string;
+  clientName: string;
+  productName: string;
+  employeeCount: number;
+  totalWeightKg: number;
+  wasteKg: number;
+  infestationRate: number;
+  timestamp: number;
+  packaging?: string;
+}
+
 export interface MasterData {
   products: string[];
-  packagings: string[];
   clients: string[];
+  packagings: string[];
   suppliers: string[];
   purchaseCategories: string[];
   serviceTypes: string[];
 }
 
-export interface ProductionRecord {
+export interface PurchaseRecord {
   id: string;
-  userId: string;
-  userName: string;
   date: string;
   lotNumber: string;
-  clientName: string;
-  productName: string;
-  packaging: string;
-  employeeCount: number;
-  totalProduction: number;
-  totalWeightKg: number;
-  wasteKg: number;
+  supplierName: string;
+  itemName: string;
+  variety?: string;
+  category: string;
+  quantity: number;
+  unit: string;
+  unitPrice: number;
+  totalAmount: number;
   infestationRate: number;
   timestamp: number;
+  userId?: string;
+  userName?: string;
+}
+
+export interface StockOutRecord {
+  id: string;
+  date: string;
+  lotNumber: string;
+  itemName: string;
+  quantity: number;
+  reason: string;
+  timestamp: number;
+  userId?: string;
+  userName?: string;
+}
+
+export interface StockStatus {
+  itemName: string;
+  totalIn: number;
+  totalOut: number;
+  currentStock: number;
 }
 
 export interface PrestationProdRecord {
   id: string;
-  userId: string;
-  userName: string;
   date: string;
   lotNumber: string;
   clientName: string;
@@ -52,12 +84,12 @@ export interface PrestationProdRecord {
   totalAmount: number;
   employeeCount: number;
   timestamp: number;
+  userId?: string;
+  userName?: string;
 }
 
 export interface PrestationEtuvageRecord {
   id: string;
-  userId: string;
-  userName: string;
   date: string;
   lotNumber: string;
   clientName: string;
@@ -69,52 +101,6 @@ export interface PrestationEtuvageRecord {
   totalAmount: number;
   employeeCount: number;
   timestamp: number;
-}
-
-export interface PurchaseRecord {
-  id: string;
-  userId: string;
-  userName: string;
-  date: string;
-  lotNumber: string;
-  supplierName: string;
-  itemName: string;
-  variety: string;
-  category: string;
-  quantity: number;
-  unit: string;
-  unitPrice: number;
-  totalAmount: number;
-  infestationRate: number;
-  timestamp: number;
-}
-
-export interface StockOutRecord {
-  id: string;
-  userId: string;
-  userName: string;
-  date: string;
-  lotNumber: string;
-  itemName: string;
-  quantity: number;
-  reason: string;
-  timestamp: number;
-}
-
-export interface YieldMetrics {
-  totalOutput: number;
-  totalWeight: number;
-  totalWaste: number;
-  avgYield: number;
-  avgWeightYield: number;
-  avgInfestation: number;
-  totalEmployees: number;
-  avgEmployees: number;
-}
-
-export interface StockStatus {
-  itemName: string;
-  totalIn: number;
-  totalOut: number;
-  currentStock: number;
+  userId?: string;
+  userName?: string;
 }

@@ -3,51 +3,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Ets Haddoud Moncef - Gestion</title>
-  
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#0f172a">
+  <title>Haddoud Prod - Gestion</title>
   <meta name="mobile-web-app-capable" content="yes">
-  
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0f172a">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     window.process = { env: { API_KEY: "" } };
-    
-    // Diagnostic d'erreurs en direct sur l'écran
-    window.onerror = function(msg, url, line, col, error) {
-      const root = document.getElementById('root');
-      if (root) {
-        root.innerHTML = `
-          <div style="padding: 40px 20px; font-family: system-ui; background: #fff1f2; color: #9f1239; min-height: 100vh; text-align: center;">
-            <div style="font-size: 40px; margin-bottom: 20px;">⚠️</div>
-            <h2 style="font-weight: 900; text-transform: uppercase; font-size: 16px; letter-spacing: -0.025em;">Erreur de Chargement</h2>
-            <p style="font-size: 11px; margin-top: 10px; opacity: 0.8; line-height: 1.5;">${msg}</p>
-            <div style="margin-top: 30px; display: flex; flex-direction: column; gap: 10px;">
-              <button onclick="location.reload();" style="background: #e11d48; color: white; border: none; padding: 15px; border-radius: 12px; font-weight: 800; font-size: 12px; text-transform: uppercase;">Réessayer</button>
-              <button onclick="localStorage.clear(); location.reload();" style="background: white; color: #e11d48; border: 2px solid #e11d48; padding: 15px; border-radius: 12px; font-weight: 800; font-size: 12px; text-transform: uppercase;">Réinitialiser (Vider Cache)</button>
-            </div>
-          </div>
-        `;
-      }
-      return false;
-    };
   </script>
-
   <style>
-    body { background-color: #f8fafc; margin: 0; padding: 0; min-height: 100vh; font-family: system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
-    #root { min-height: 100vh; display: flex; flex-direction: column; }
-    .loader { width: 32px; height: 32px; border: 3px solid #f1f5f9; border-top-color: #2563eb; border-radius: 50%; animation: spin 0.6s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    body { background-color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
   </style>
-
-  <!-- IMPORTMAP FIXÉ : Version 19.2.4 unique pour TOUS les modules -->
   <script type="importmap">
 {
   "imports": {
-    "react": "https://esm.sh/react@19.2.4",
-    "react-dom": "https://esm.sh/react-dom@19.2.4",
-    "react-dom/client": "https://esm.sh/react-dom@19.2.4/client",
-    "recharts": "https://esm.sh/recharts@2.15.0?deps=react@19.2.4,react-dom@19.2.4",
+    "react": "https://esm.sh/react@19.0.0",
+    "react-dom": "https://esm.sh/react-dom@19.0.0",
+    "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
+    "recharts": "https://esm.sh/recharts@2.15.0?deps=react@19.0.0,react-dom@19.0.0",
     "@google/genai": "https://esm.sh/@google/genai@1.39.0",
     "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
     "react/": "https://esm.sh/react@^19.2.4/"
@@ -55,16 +29,8 @@
 }
 </script>
 </head>
-<body>
-  <div id="root">
-    <div class="flex flex-col items-center justify-center h-screen space-y-8 px-10 text-center bg-slate-50">
-      <div class="loader"></div>
-      <div class="animate-pulse">
-        <h1 class="text-xl font-black text-slate-900 uppercase tracking-tighter">Haddoud Moncef</h1>
-        <p class="text-[10px] font-black uppercase tracking-[0.2em] text-blue-500 mt-2">Chargement Version 19.2.4...</p>
-      </div>
-    </div>
-  </div>
+<body class="antialiased">
+  <div id="root"></div>
   <script type="module" src="./index.tsx"></script>
 </body>
 </html>
