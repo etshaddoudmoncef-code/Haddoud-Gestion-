@@ -17,9 +17,12 @@ const History: React.FC<HistoryProps> = ({ records, onDelete, onEdit, isAdmin })
 
   // Génération des options d'années basées sur les données
   const years = useMemo(() => {
-    // Fix: Explicitly type the Set as number to avoid arithmetic operation errors during sort on line 21
-    const uniqueYears = new Set<number>(records.map(r => new Date(r.date).getFullYear()));
-    return Array.from(uniqueYears).sort((a: number, b: number) => b - a);
+    const uniqueYears = new Set<number>();
+    records.forEach(r => {
+      const year = new Date(r.date).getFullYear();
+      if (!isNaN(year)) uniqueYears.add(year);
+    });
+    return Array.from(uniqueYears).sort((a, b) => b - a);
   }, [records]);
 
   const months = [
@@ -32,6 +35,8 @@ const History: React.FC<HistoryProps> = ({ records, onDelete, onEdit, isAdmin })
   const filteredRecords = useMemo(() => {
     return records.filter(r => {
       const dateObj = new Date(r.date);
+      if (isNaN(dateObj.getTime())) return false;
+
       const day = String(dateObj.getDate()).padStart(2, '0');
       const month = String(dateObj.getMonth() + 1).padStart(2, '0');
       const year = String(dateObj.getFullYear());
@@ -123,7 +128,6 @@ const History: React.FC<HistoryProps> = ({ records, onDelete, onEdit, isAdmin })
           </div>
         </div>
 
-        {/* Panneau de filtres avancés */}
         {showFilters && (
           <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-xl animate-in slide-in-from-top duration-300">
             <div className="grid grid-cols-3 gap-3">

@@ -1,8 +1,5 @@
-
 /**
  * Service de synchronisation Google Drive pour Ets Haddoud Moncef.
- * Note: Pour une utilisation en production, un CLIENT_ID valide doit être configuré 
- * dans la console Google Cloud avec l'API Google Drive activée.
  */
 
 const CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com'; // À remplacer par le vrai Client ID
@@ -14,33 +11,47 @@ let gapiInited = false;
 let gisInited = false;
 
 /**
- * Initialise les bibliothèques Google API.
+ * Initialise les bibliothèques Google API de manière sécurisée.
  */
 export const initGoogleDriveApi = () => {
-  return new Promise<void>((resolve) => {
-    // Charger le client GAPI
-    (window as any).gapi.load('client', async () => {
-      await (window as any).gapi.client.init({
-        // apiKey: 'YOUR_API_KEY', // Optionnel si on utilise drive.file
-        discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
+  return new Promise<void>((resolve, reject) => {
+    try {
+      // Charger le client GAPI
+      (window as any).gapi.load('client', async () => {
+        try {
+          await (window as any).gapi.client.init({
+            discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
+          });
+          gapiInited = true;
+          checkInitialization();
+        } catch (e) {
+          console.error("Erreur gapi init", e);
+          reject(e);
+        }
       });
-      gapiInited = true;
-      checkInitialization();
-    });
 
-    // Initialiser le client GIS (Google Identity Services)
-    tokenClient = (window as any).google.accounts.oauth2.initTokenClient({
-      client_id: CLIENT_ID,
-      scope: SCOPES,
-      callback: '', // défini lors de l'appel
-    });
-    gisInited = true;
-    checkInitialization();
+      // Initialiser le client GIS (Google Identity Services)
+      // On vérifie que window.google est disponible avant d'appeler
+      const checkGoogleInterval = setInterval(() => {
+        if ((window as any).google && (window as any).google.accounts) {
+          clearInterval(checkGoogleInterval);
+          tokenClient = (window as any).google.accounts.oauth2.initTokenClient({
+            client_id: CLIENT_ID,
+            scope: SCOPES,
+            callback: '', // défini lors de l'appel
+          });
+          gisInited = true;
+          checkInitialization();
+        }
+      }, 100);
 
-    function checkInitialization() {
-      if (gapiInited && gisInited) {
-        resolve();
+      function checkInitialization() {
+        if (gapiInited && gisInited) {
+          resolve();
+        }
       }
+    } catch (err) {
+      reject(err);
     }
   });
 };
@@ -50,6 +61,11 @@ export const initGoogleDriveApi = () => {
  */
 const withAuth = (action: (token: string) => Promise<void>) => {
   return new Promise<void>((resolve, reject) => {
+    if (!tokenClient) {
+      reject(new Error("Google Identity Service non initialisé."));
+      return;
+    }
+
     tokenClient.callback = async (resp: any) => {
       if (resp.error !== undefined) {
         reject(resp);
