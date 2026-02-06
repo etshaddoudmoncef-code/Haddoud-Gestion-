@@ -16,13 +16,6 @@
   <script>
     // Shim indispensable pour le SDK Google GenAI
     window.process = { env: { API_KEY: "" } };
-    
-    // Capturer les erreurs de chargement de module pour aider au diagnostic
-    window.addEventListener('error', function(e) {
-      if (e.message.includes('import')) {
-        console.error('Erreur de chargement de module:', e);
-      }
-    });
   </script>
 
   <style>

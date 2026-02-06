@@ -28,7 +28,6 @@ const PrestationEtuvageModule: React.FC<PrestationEtuvageModuleProps> = ({ recor
     const totalWeight = monthlyRecords.reduce((sum, r) => sum + r.weightIn, 0);
     const totalEmployees = monthlyRecords.reduce((sum, r) => sum + (r.employeeCount || 0), 0);
     
-    // Nombre de jours uniques travaillés ce mois
     const uniqueDays = new Set(monthlyRecords.map(r => r.date)).size;
 
     return { 
