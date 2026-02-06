@@ -12,44 +12,43 @@
   
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    // Initialisation et capture d'erreurs globale pour Android
+    // Configuration d'environnement immédiate
     window.process = { env: { API_KEY: "" } };
     
+    // Capture d'erreurs fatales pour le diagnostic sur Android
     window.onerror = function(msg, url, line) {
-      console.error("Erreur détectée:", msg, "Ligne:", line);
-      const debugDiv = document.getElementById('debug-error');
-      if (debugDiv) {
-        debugDiv.style.display = 'block';
-        debugDiv.innerHTML = "<b>Démarrage interrompu :</b> " + msg + " (Ligne " + line + ")";
+      console.error("Erreur Fatale:", msg);
+      const errBox = document.getElementById('debug-error');
+      if (errBox) {
+        errBox.style.display = 'block';
+        errBox.innerHTML = `<b>Erreur de lancement :</b> ${msg}<br><small>Vérifiez votre version de Chrome ou WebView.</small>`;
       }
       return false;
     };
   </script>
 
   <style>
-    :root { --app-height: 100%; }
     body {
       background-color: #f8fafc;
       -webkit-tap-highlight-color: transparent;
       margin: 0; padding: 0; min-height: 100vh;
-      font-family: system-ui, -apple-system, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       overscroll-behavior-y: contain;
     }
-    #root { min-height: 100vh; display: flex; flex-direction: column; }
+    #root { min-height: 100vh; }
     .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .loader { width: 32px; height: 32px; border: 4px solid #e2e8f0; border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; }
+    .loader { width: 40px; height: 40px; border: 4px solid #e2e8f0; border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; }
   </style>
 
-  <!-- IMPORTMAP FIXÉ : Une seule version de React (19.0.0) pour éviter tout conflit -->
+  <!-- IMPORTMAP FIXÉ : Force la version 19.0.0 pour TOUTES les dépendances -->
   <script type="importmap">
 {
   "imports": {
     "react": "https://esm.sh/react@19.0.0",
     "react-dom": "https://esm.sh/react-dom@19.0.0",
     "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
-    "recharts": "https://esm.sh/recharts@2.15.0?external=react,react-dom",
+    "recharts": "https://esm.sh/recharts@2.15.0?deps=react@19.0.0,react-dom@19.0.0",
     "@google/genai": "https://esm.sh/@google/genai@1.39.0",
     "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
     "react/": "https://esm.sh/react@^19.2.4/"
@@ -57,18 +56,19 @@
 }
 </script>
 
+  <!-- Chargement des scripts Google après les modules -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js" async defer></script>
 </head>
 <body>
   <div id="root">
-    <div class="flex flex-col items-center justify-center h-screen space-y-6 px-10 text-center">
+    <div class="flex flex-col items-center justify-center h-screen space-y-6 px-10 text-center bg-slate-50">
       <div class="loader"></div>
       <div>
-        <h1 class="text-lg font-black text-slate-900 uppercase tracking-tighter">Ets Haddoud Moncef</h1>
-        <p class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mt-2">Initialisation sécurisée...</p>
+        <h1 class="text-xl font-black text-slate-900 uppercase tracking-tight">Ets Haddoud Moncef</h1>
+        <p class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mt-2">Chargement du moteur de gestion...</p>
       </div>
-      <div id="debug-error" style="display:none; font-family:monospace; font-size:11px; color:#991b1b; padding:20px; background:#fef2f2; border:1px solid #fee2e2; border-radius:16px; max-width:100%;"></div>
+      <div id="debug-error" style="display:none; font-family:monospace; font-size:11px; color:#991b1b; padding:20px; background:#fef2f2; border:1px solid #fee2e2; border-radius:16px; width:80%;"></div>
     </div>
   </div>
   <script type="module" src="./index.tsx"></script>

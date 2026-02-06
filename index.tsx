@@ -3,12 +3,15 @@ import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 
 /**
- * Point d'entrée robuste. 
- * On capture le rendu pour éviter les blocages silencieux sur Android.
+ * Lancement de l'application avec un filet de sécurité.
  */
-const startApp = () => {
+const startApplication = () => {
   const container = document.getElementById('root');
-  if (!container) return;
+  
+  if (!container) {
+    console.error("DOM Root introuvable.");
+    return;
+  }
 
   try {
     const root = createRoot(container);
@@ -17,15 +20,20 @@ const startApp = () => {
         <App />
       </React.StrictMode>
     );
-    console.log("Système de gestion démarré.");
-  } catch (err) {
-    console.error("Erreur au montage React:", err);
+    console.log("Application Haddoud démarrée avec succès.");
+  } catch (error) {
+    console.error("Erreur de rendu React:", error);
     const debug = document.getElementById('debug-error');
     if (debug) {
       debug.style.display = 'block';
-      debug.innerHTML = "<b>Échec du rendu :</b> Une erreur système empêche l'affichage.";
+      debug.innerHTML = `<b>Erreur Système :</b> L'interface n'a pas pu être générée.<br>${error instanceof Error ? error.message : String(error)}`;
     }
   }
 };
 
-startApp();
+// On attend que le DOM soit totalement prêt
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', startApplication);
+} else {
+  startApplication();
+}
