@@ -19,7 +19,7 @@
       const errDiv = document.getElementById('debug-error');
       if (errDiv) {
         errDiv.style.display = 'block';
-        errDiv.innerHTML = `Error: ${msg}<br>Line: ${line}`;
+        errDiv.innerHTML = `<b>Erreur:</b> ${msg}<br><b>Ligne:</b> ${line}<br><b>Fichier:</b> ${url}`;
       }
       return false;
     };
@@ -41,7 +41,7 @@
     .loader { width: 24px; height: 24px; border: 3px solid #e2e8f0; border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; }
   </style>
 
-  <!-- Importmap UNIQUE et COHÉRENT : Une seule version de React (19.0.0) -->
+  <!-- Importmap NETTOYÉ : Suppression des versions contradictoires 19.2.4 -->
   <script type="importmap">
 {
   "imports": {
@@ -64,7 +64,7 @@
     <div class="flex flex-col items-center justify-center h-screen space-y-4">
       <div class="loader"></div>
       <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Démarrage sécurisé...</p>
-      <div id="debug-error" style="display:none; font-family:monospace; font-size:10px; color:red; padding:10px; background:#fff1f2; border:1px solid #fecaca; border-radius:8px; max-width:80%;"></div>
+      <div id="debug-error" style="display:none; font-family:monospace; font-size:10px; color:red; padding:15px; background:#fff1f2; border:1px solid #fecaca; border-radius:12px; max-width:85%; word-break:break-all; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);"></div>
     </div>
   </div>
   <script type="module" src="./index.tsx" crossorigin="anonymous"></script>
