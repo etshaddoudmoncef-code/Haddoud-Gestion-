@@ -1,0 +1,7 @@
+{
+  "name": "Ets Haddoud Moncef",
+  "description": "Application de gestion de production et de traçabilité pour les Établissements Haddoud Moncef.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
