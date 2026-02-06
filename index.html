@@ -8,40 +8,38 @@
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0f172a">
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    // Polyfill et environnement
     window.process = { env: { API_KEY: "" } };
     
-    // Diagnostic d'erreurs pour WebView Android
+    // Capturer toutes les erreurs avant même le chargement de React
     window.onerror = function(msg, url, line, col, error) {
-      console.error("Erreur App:", msg);
-      const debug = document.getElementById('debug-error');
-      if (debug) {
-        debug.style.display = 'block';
-        debug.innerHTML = `<b>Erreur de démarrage :</b><br><small>${msg}</small>`;
-      }
+      document.body.innerHTML = `
+        <div style="padding: 20px; font-family: sans-serif; background: #fef2f2; color: #991b1b; height: 100vh;">
+          <h2 style="font-weight: 900; text-transform: uppercase; font-size: 14px;">Erreur de Démarrage</h2>
+          <p style="font-size: 11px; margin-top: 10px;">${msg}</p>
+          <p style="font-size: 9px; opacity: 0.7;">${url} (L:${line})</p>
+          <button onclick="localStorage.clear(); location.reload();" style="margin-top: 20px; background: #991b1b; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; font-size: 10px; text-transform: uppercase;">Réinitialiser l'App</button>
+        </div>
+      `;
       return false;
     };
+
+    // Intercepter les erreurs de modules non gérées
+    window.addEventListener('unhandledrejection', function(event) {
+      console.error('Unhandled rejection:', event.reason);
+    });
   </script>
 
   <style>
-    body {
-      background-color: #f8fafc;
-      -webkit-tap-highlight-color: transparent;
-      margin: 0; padding: 0; min-height: 100vh;
-      font-family: system-ui, -apple-system, sans-serif;
-      overscroll-behavior-y: contain;
-    }
+    body { background-color: #f8fafc; margin: 0; padding: 0; min-height: 100vh; font-family: system-ui, sans-serif; }
     #root { min-height: 100vh; display: flex; flex-direction: column; }
-    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .loader { width: 30px; height: 30px; border: 3px solid #e2e8f0; border-top-color: #3b82f6; border-radius: 50%; animation: spin 0.8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .loader { width: 32px; height: 32px; border: 3px solid #e2e8f0; border-top-color: #3b82f6; border-radius: 50%; animation: spin 0.8s linear infinite; }
   </style>
 
-  <!-- IMPORTMAP UNIQUE : Suppression de toute duplication de version -->
+  <!-- IMPORTMAP ULTRA-PROPRE : AUCUN CONFLIT POSSIBLE -->
   <script type="importmap">
 {
   "imports": {
@@ -55,19 +53,16 @@
   }
 }
 </script>
-
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
-  <script src="https://apis.google.com/js/api.js" async defer></script>
 </head>
 <body>
   <div id="root">
-    <div class="flex flex-col items-center justify-center h-screen space-y-6 px-10 text-center">
+    <div class="flex flex-col items-center justify-center h-screen space-y-8 px-10 text-center">
       <div class="loader"></div>
       <div>
-        <h1 class="text-lg font-black text-slate-900 uppercase tracking-tighter">Ets Haddoud Moncef</h1>
-        <p class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mt-2">Chargement haute compatibilité...</p>
+        <h1 class="text-xl font-black text-slate-900 uppercase tracking-tighter">Haddoud Moncef</h1>
+        <p class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mt-2">Initialisation Sécurisée...</p>
       </div>
-      <div id="debug-error" style="display:none; font-family:monospace; font-size:11px; color:#991b1b; padding:15px; background:#fef2f2; border:1px solid #fee2e2; border-radius:12px; max-width:90%;"></div>
+      <button onclick="localStorage.clear(); location.reload();" class="text-[9px] font-black text-slate-300 uppercase underline">Effacer le cache si bloqué</button>
     </div>
   </div>
   <script type="module" src="./index.tsx"></script>
