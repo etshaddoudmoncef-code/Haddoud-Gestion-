@@ -1,5 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { ProductionRecord, PurchaseRecord, StockOutRecord, PrestationProdRecord, PrestationEtuvageRecord, User, MasterData, MainTab } from './types.ts';
+import { 
+  ProductionRecord, PurchaseRecord, StockOutRecord, 
+  PrestationProdRecord, PrestationEtuvageRecord, 
+  User, MasterData, MainTab 
+} from './types.ts';
 import Layout from './components/Layout.tsx';
 import Dashboard from './components/Dashboard.tsx';
 import RecordForm from './components/RecordForm.tsx';
@@ -9,237 +13,127 @@ import Login from './components/Login.tsx';
 import Management from './components/Management.tsx';
 import StockModule from './components/StockModule.tsx';
 import LotTraceability from './components/LotTraceability.tsx';
-import PrestationProdModule from './components/PrestationProdModule.tsx';
-import PrestationEtuvageModule from './components/PrestationEtuvageModule.tsx';
 
-// Générateur d'ID robuste pour Android (Fallback si crypto.randomUUID est absent)
 export const generateId = () => {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
   return Date.now().toString(36) + Math.random().toString(36).substring(2);
 };
 
-const DEFAULT_MASTER_DATA: MasterData = {
-  products: ['Tomate (Roma)', 'Poivron (Rouge)', 'Concombre'],
-  packagings: ['Vrac (Sacs)', 'Caisse 10kg', 'Barquette 500g'],
-  clients: ['Client A', 'Client B'],
-  suppliers: ['AgriPlus', 'EcoPack', 'Fertilo'],
-  purchaseCategories: ['Intrants', 'Emballages', 'Petit Matériel', 'Maintenance'],
-  serviceTypes: ['Triage', 'Lavage', 'Calibrage', 'Conditionnement']
+const DEFAULT_MASTER: MasterData = {
+  products: ['Tomate Roma', 'Tomate Cerise', 'Poivron'],
+  packagings: ['Caisse 10kg', 'Barquette 500g'],
+  clients: ['Client Local', 'Export'],
+  suppliers: ['AgriDirect', 'BioGrow'],
+  purchaseCategories: ['Intrants', 'Emballages'],
+  serviceTypes: ['Triage', 'Conditionnement']
 };
 
-type ProductionSubTab = 'stats' | 'entry' | 'history' | 'lots';
-
 const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<MainTab>('production');
-  const [prodSubTab, setProdSubTab] = useState<ProductionSubTab>('stats');
-  const [editingRecord, setEditingRecord] = useState<ProductionRecord | null>(null);
-  
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
-    const saved = localStorage.getItem('prod_current_user');
+    const saved = localStorage.getItem('h_user');
     return saved ? JSON.parse(saved) : null;
   });
-  
-  const [allUsers, setAllUsers] = useState<User[]>(() => {
-    const saved = localStorage.getItem('prod_users');
-    return saved ? JSON.parse(saved) : [];
-  });
 
-  const [allRecords, setAllRecords] = useState<ProductionRecord[]>(() => {
-    const saved = localStorage.getItem('prod_records');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [activeTab, setActiveTab] = useState<MainTab>('production');
+  const [prodSub, setProdSub] = useState<'stats' | 'form' | 'journal' | 'lots'>('stats');
+  const [editing, setEditing] = useState<any>(null);
 
-  const [allPrestationProd, setAllPrestationProd] = useState<PrestationProdRecord[]>(() => {
-    const saved = localStorage.getItem('prod_prestation_prod');
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  const [allPrestationEtuvage, setAllPrestationEtuvage] = useState<PrestationEtuvageRecord[]>(() => {
-    const saved = localStorage.getItem('prod_prestation_etuvage');
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  const [allPurchases, setAllPurchases] = useState<PurchaseRecord[]>(() => {
-    const saved = localStorage.getItem('prod_purchases');
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  const [allStockOuts, setAllStockOuts] = useState<StockOutRecord[]>(() => {
-    const saved = localStorage.getItem('prod_stock_outs');
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  const [masterData, setMasterData] = useState<MasterData>(() => {
-    const saved = localStorage.getItem('prod_master_data');
-    return saved ? JSON.parse(saved) : DEFAULT_MASTER_DATA;
-  });
+  // Persistence helpers
+  const [records, setRecords] = useState<ProductionRecord[]>(() => JSON.parse(localStorage.getItem('h_records') || '[]'));
+  const [users, setUsers] = useState<User[]>(() => JSON.parse(localStorage.getItem('h_users') || '[]'));
+  const [purchases, setPurchases] = useState<PurchaseRecord[]>(() => JSON.parse(localStorage.getItem('h_purchases') || '[]'));
+  const [stockOuts, setStockOuts] = useState<StockOutRecord[]>(() => JSON.parse(localStorage.getItem('h_stockouts') || '[]'));
+  const [master, setMaster] = useState<MasterData>(() => JSON.parse(localStorage.getItem('h_master') || JSON.stringify(DEFAULT_MASTER)));
 
   useEffect(() => {
-    if (currentUser) {
-      const updatedUser = allUsers.find(u => u.id === currentUser.id);
-      if (updatedUser && (
-        JSON.stringify(updatedUser.allowedTabs) !== JSON.stringify(currentUser.allowedTabs) ||
-        updatedUser.password !== currentUser.password
-      )) {
-        setCurrentUser(updatedUser);
-      }
-    }
-  }, [allUsers]);
+    localStorage.setItem('h_records', JSON.stringify(records));
+    localStorage.setItem('h_users', JSON.stringify(users));
+    localStorage.setItem('h_purchases', JSON.stringify(purchases));
+    localStorage.setItem('h_stockouts', JSON.stringify(stockOuts));
+    localStorage.setItem('h_master', JSON.stringify(master));
+    if (currentUser) localStorage.setItem('h_user', JSON.stringify(currentUser));
+    else localStorage.removeItem('h_user');
+  }, [records, users, purchases, stockOuts, master, currentUser]);
 
-  useEffect(() => {
-    if (currentUser && currentUser.role !== 'ADMIN') {
-      if (!currentUser.allowedTabs.includes(activeTab)) {
-        setActiveTab(currentUser.allowedTabs[0] || 'production');
-      }
-    }
-  }, [currentUser, activeTab]);
+  const isAdmin = currentUser?.role === 'ADMIN';
 
-  useEffect(() => {
-    if (currentUser) {
-      localStorage.setItem('prod_current_user', JSON.stringify(currentUser));
-    } else {
-      localStorage.removeItem('prod_current_user');
-    }
-    localStorage.setItem('prod_users', JSON.stringify(allUsers));
-    localStorage.setItem('prod_records', JSON.stringify(allRecords));
-    localStorage.setItem('prod_prestation_prod', JSON.stringify(allPrestationProd));
-    localStorage.setItem('prod_prestation_etuvage', JSON.stringify(allPrestationEtuvage));
-    localStorage.setItem('prod_purchases', JSON.stringify(allPurchases));
-    localStorage.setItem('prod_stock_outs', JSON.stringify(allStockOuts));
-    localStorage.setItem('prod_master_data', JSON.stringify(masterData));
-  }, [currentUser, allUsers, allRecords, allPrestationProd, allPrestationEtuvage, allPurchases, allStockOuts, masterData]);
+  if (!currentUser) return <Login onLogin={setCurrentUser} existingUsers={users} onRegisterAdmin={(u) => { setUsers([...users, u]); setCurrentUser(u); }} />;
 
-  const userRecords = useMemo(() => {
-    if (!currentUser) return [];
-    if (currentUser.role === 'ADMIN') return allRecords;
-    return allRecords.filter(r => r.userId === currentUser.id);
-  }, [allRecords, currentUser]);
-
-  const handleAddRecord = (data: Omit<ProductionRecord, 'id' | 'timestamp' | 'userId' | 'userName'>) => {
-    if (!currentUser) return;
-    const newRecord: ProductionRecord = { ...data, id: generateId(), userId: currentUser.id, userName: currentUser.name, timestamp: Date.now() };
-    setAllRecords(prev => [...prev, newRecord]);
-    setProdSubTab('history');
-  };
-
-  const handleUpdateRecord = (id: string, data: Partial<ProductionRecord>) => {
-    setAllRecords(prev => prev.map(r => r.id === id ? { ...r, ...data } : r));
-    setEditingRecord(null);
-    setProdSubTab('history');
-  };
-
-  const handleUpdateUserPermissions = (userId: string, allowedTabs: MainTab[]) => {
-    setAllUsers(prev => prev.map(u => u.id === userId ? { ...u, allowedTabs } : u));
-  };
-
-  const handleResetPassword = (userId: string, newPassword: string) => {
-    setAllUsers(prev => prev.map(u => u.id === userId ? { ...u, password: newPassword } : u));
-  };
-
-  if (!currentUser) return <Login onLogin={setCurrentUser} />;
-
-  const renderContent = () => {
-    switch (activeTab) {
+  const renderTabContent = () => {
+    switch(activeTab) {
       case 'production':
         return (
-          <div className="space-y-4">
-            <div className="flex bg-white p-1 rounded-2xl shadow-sm border border-slate-100 mb-6 overflow-x-auto no-scrollbar">
-              {['stats', 'entry', 'history', 'lots'].map((t) => (
+          <div className="space-y-6">
+            <div className="flex bg-white p-1 rounded-2xl shadow-sm border border-slate-200 sticky top-[72px] lg:top-4 z-40 overflow-x-auto no-scrollbar">
+              {[
+                { id: 'stats', label: 'Stats' },
+                { id: 'form', label: editing ? 'Édition' : 'Saisie' },
+                { id: 'journal', label: 'Journal' },
+                { id: 'lots', label: 'Traçabilité' }
+              ].map(t => (
                 <button 
-                  key={t}
-                  onClick={() => {
-                    setProdSubTab(t as any);
-                    if (t !== 'entry') setEditingRecord(null);
-                  }}
-                  className={`flex-1 min-w-[70px] py-2 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all ${prodSubTab === t ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-600'}`}
+                  key={t.id} 
+                  onClick={() => { setProdSub(t.id as any); if(t.id !== 'form') setEditing(null); }}
+                  className={`flex-1 min-w-[80px] py-2.5 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${prodSub === t.id ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400'}`}
                 >
-                  {t === 'stats' ? 'Stats' : t === 'entry' ? 'Saisie' : t === 'history' ? 'Journal' : 'Lots'}
+                  {t.label}
                 </button>
               ))}
             </div>
-            {prodSubTab === 'stats' && <Dashboard records={userRecords} isAdmin={currentUser.role === 'ADMIN'} />}
-            {prodSubTab === 'entry' && (
+            {prodSub === 'stats' && <Dashboard records={records} isAdmin={isAdmin} />}
+            {prodSub === 'form' && (
               <RecordForm 
-                onSubmit={editingRecord ? (data) => handleUpdateRecord(editingRecord.id, data) : handleAddRecord} 
-                masterData={masterData} 
-                initialData={editingRecord || undefined}
+                masterData={master} 
+                initialData={editing} 
+                onSubmit={(d) => {
+                  if (editing) {
+                    setRecords(prev => prev.map(r => r.id === editing.id ? { ...r, ...d } : r));
+                    setEditing(null);
+                  } else {
+                    setRecords([...records, { ...d, id: generateId(), timestamp: Date.now(), userId: currentUser.id, userName: currentUser.name }]);
+                  }
+                  setProdSub('journal');
+                }} 
               />
             )}
-            {prodSubTab === 'history' && (
+            {prodSub === 'journal' && (
               <History 
-                records={userRecords} 
-                onDelete={(id) => setAllRecords(r => r.filter(x => x.id !== id))} 
-                onEdit={(record) => {
-                  setEditingRecord(record);
-                  setProdSubTab('entry');
-                }}
-                isAdmin={currentUser.role === 'ADMIN'} 
+                records={records} 
+                isAdmin={isAdmin} 
+                onEdit={(r) => { setEditing(r); setProdSub('form'); }} 
+                onDelete={(id) => setRecords(prev => prev.filter(r => r.id !== id))} 
               />
             )}
-            {prodSubTab === 'lots' && <LotTraceability records={allRecords} purchases={allPurchases} />}
+            {prodSub === 'lots' && <LotTraceability records={records} purchases={purchases} />}
           </div>
-        );
-      case 'prestation_prod':
-        return (
-          <PrestationProdModule 
-            records={allPrestationProd} 
-            masterData={masterData} 
-            onAdd={(d) => setAllPrestationProd(p => [...p, { ...d, id: generateId(), userId: currentUser.id, userName: currentUser.name, timestamp: Date.now() }])} 
-            onUpdate={(id, d) => setAllPrestationProd(p => p.map(r => r.id === id ? { ...r, ...d } : r))}
-            onDelete={(id) => setAllPrestationProd(p => p.filter(r => r.id !== id))} 
-            isAdmin={currentUser.role === 'ADMIN'} 
-          />
-        );
-      case 'prestation_etuvage':
-        return (
-          <PrestationEtuvageModule 
-            records={allPrestationEtuvage} 
-            masterData={masterData} 
-            onAdd={(d) => setAllPrestationEtuvage(p => [...p, { ...d, id: generateId(), userId: currentUser.id, userName: currentUser.name, timestamp: Date.now() }])} 
-            onUpdate={(id, d) => setAllPrestationEtuvage(p => p.map(r => r.id === id ? { ...r, ...d } : r))}
-            onDelete={(id) => setAllPrestationEtuvage(p => p.filter(r => r.id !== id))} 
-            isAdmin={currentUser.role === 'ADMIN'} 
-          />
         );
       case 'stock':
         return (
           <StockModule 
-            purchases={allPurchases} 
-            stockOuts={allStockOuts} 
-            masterData={masterData} 
-            onAddPurchase={(d) => setAllPurchases(p => [...p, { ...d, id: generateId(), userId: currentUser.id, userName: currentUser.name, timestamp: Date.now() }])} 
-            onAddStockOut={(d) => setAllStockOuts(s => [...s, { ...d, id: generateId(), userId: currentUser.id, userName: currentUser.name, timestamp: Date.now() }])} 
-            onUpdatePurchase={(id, d) => setAllPurchases(p => p.map(r => r.id === id ? { ...r, ...d } : r))}
-            onUpdateStockOut={(id, d) => setAllStockOuts(s => s.map(r => r.id === id ? { ...r, ...d } : r))}
-            onDeletePurchase={(id) => setAllPurchases(p => p.filter(r => r.id !== id))} 
-            onDeleteStockOut={(id) => setAllStockOuts(s => s.filter(r => r.id !== id))}
-            isAdmin={currentUser.role === 'ADMIN'}
+            purchases={purchases} stockOuts={stockOuts} masterData={master} isAdmin={isAdmin}
+            onAddPurchase={p => setPurchases([...purchases, { ...p, id: generateId(), timestamp: Date.now(), userId: currentUser.id, userName: currentUser.name }])}
+            onAddStockOut={s => setStockOuts([...stockOuts, { ...s, id: generateId(), timestamp: Date.now(), userId: currentUser.id, userName: currentUser.name }])}
+            onDeletePurchase={id => setPurchases(prev => prev.filter(p => p.id !== id))}
+            onDeleteStockOut={id => setStockOuts(prev => prev.filter(s => s.id !== id))}
           />
         );
       case 'insights':
-        return <AiInsights records={userRecords} isAdmin={currentUser.role === 'ADMIN'} />;
+        return <AiInsights records={records} isAdmin={isAdmin} />;
       case 'management':
         return (
           <Management 
-            data={masterData} 
-            users={allUsers} 
-            onUpdate={setMasterData} 
-            onUpdatePermissions={handleUpdateUserPermissions} 
-            onDeleteUser={(id) => setAllUsers(u => u.filter(x => x.id !== id))}
-            onAddUser={(user) => setAllUsers(prev => [...prev, user])}
-            onResetPassword={handleResetPassword}
+            data={master} users={users} onUpdate={setMaster} 
+            onUpdatePermissions={(uid, tabs) => setUsers(prev => prev.map(u => u.id === uid ? { ...u, allowedTabs: tabs } : u))}
+            onDeleteUser={id => setUsers(prev => prev.filter(u => u.id !== id))}
+            onAddUser={u => setUsers([...users, u])}
           />
         );
-      default:
-        return null;
+      default: return <div className="p-20 text-center text-slate-400 italic">Module en cours de développement...</div>;
     }
   };
 
   return (
     <Layout activeTab={activeTab} onTabChange={setActiveTab} user={currentUser} onLogout={() => setCurrentUser(null)}>
-      {renderContent()}
+      {renderTabContent()}
     </Layout>
   );
 };

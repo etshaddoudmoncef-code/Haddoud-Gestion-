@@ -1,20 +1,12 @@
-
 import React, { useState, useEffect } from 'react';
 import { ProductionRecord } from '../types.ts';
 import { analyzeProductionData } from '../services/geminiService.ts';
-import { ICONS } from '../constants.tsx';
 
-interface AiInsightsProps {
-  records: ProductionRecord[];
-  isAdmin: boolean;
-}
+const AiInsights: React.FC<{ records: ProductionRecord[]; isAdmin: boolean }> = ({ records }) => {
+  const [analysis, setAnalysis] = useState('');
+  const [loading, setLoading] = useState(false);
 
-const AiInsights: React.FC<AiInsightsProps> = ({ records, isAdmin }) => {
-  const [analysis, setAnalysis] = useState<string>('');
-  const [loading, setLoading] = useState<boolean>(false);
-
-  const triggerAnalysis = async () => {
-    if (records.length === 0) return;
+  const fetchAnalysis = async () => {
     setLoading(true);
     const result = await analyzeProductionData(records);
     setAnalysis(result);
@@ -22,57 +14,43 @@ const AiInsights: React.FC<AiInsightsProps> = ({ records, isAdmin }) => {
   };
 
   useEffect(() => {
-    if (records.length > 0 && !analysis) {
-      triggerAnalysis();
-    }
+    if (records.length >= 2 && !analysis) fetchAnalysis();
   }, [records]);
 
   return (
-    <div className="space-y-6">
-      <div className={`p-6 rounded-3xl text-white shadow-xl ${isAdmin ? 'bg-gradient-to-br from-slate-800 to-slate-950' : 'bg-gradient-to-br from-blue-600 to-indigo-700'}`}>
-        <div className="flex items-center gap-3 mb-4">
-          <div className="bg-white/20 p-2 rounded-xl">
-            <ICONS.Ai className="w-6 h-6" />
+    <div className="space-y-6 animate-in fade-in duration-500">
+      <div className="bg-gradient-to-br from-indigo-600 to-blue-700 p-8 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+        <div className="relative z-10">
+          <div className="flex items-center gap-4 mb-8">
+            <span className="text-3xl">✨</span>
+            <h2 className="text-xl font-black tracking-tight">Conseils IA Stratégiques</h2>
           </div>
-          <div>
-            <h2 className="text-xl font-bold">Conseils IA {isAdmin ? 'stratégiques' : 'opérationnels'}</h2>
-            <p className="text-blue-100 text-[10px] opacity-70">
-              {isAdmin ? "Analyse de la performance globale de l'équipe" : "Optimisation de votre production personnelle"}
-            </p>
-          </div>
-        </div>
 
-        {records.length < 2 ? (
-          <div className="bg-white/10 p-4 rounded-2xl border border-white/20 text-xs">
-            Ajoutez au moins 2 rapports pour générer une analyse intelligente.
-          </div>
-        ) : loading ? (
-          <div className="flex flex-col items-center justify-center p-8 space-y-4">
-            <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-            <p className="text-[10px] animate-pulse">L'intelligence artificielle travaille...</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="whitespace-pre-wrap text-blue-50 leading-relaxed text-xs">
-              {analysis || "Prêt pour l'analyse."}
+          {loading ? (
+            <div className="py-12 flex flex-col items-center justify-center space-y-4">
+              <div className="w-8 h-8 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
+              <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Consultation en cours...</p>
             </div>
-            <button 
-              onClick={triggerAnalysis}
-              className="w-full bg-white/10 hover:bg-white/20 text-white font-bold py-2 rounded-xl text-[10px] transition-all flex justify-center items-center gap-2 mt-4"
-            >
-              Recalculer l'analyse
-            </button>
-          </div>
-        )}
+          ) : (
+            <div className="space-y-6">
+              <div className="bg-white/10 p-6 rounded-3xl border border-white/10 backdrop-blur-sm">
+                <p className="text-sm leading-relaxed whitespace-pre-wrap font-medium text-blue-50">
+                  {analysis || "Collectez plus de données pour débloquer l'analyse prédictive."}
+                </p>
+              </div>
+              <button 
+                onClick={fetchAnalysis}
+                className="w-full bg-white text-indigo-600 font-black py-4 rounded-2xl text-[10px] uppercase tracking-widest active:scale-95 transition-all shadow-xl"
+              >
+                Actualiser l'analyse
+              </button>
+            </div>
+          )}
+        </div>
       </div>
-
-      <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
-        <h4 className="text-xs font-black text-slate-800 uppercase mb-2">Note de confidentialité</h4>
-        <p className="text-[10px] text-slate-500 leading-relaxed italic">
-          {isAdmin 
-            ? "En tant qu'administrateur, vous voyez les données de tous les opérateurs. Vos conseils IA incluent les tendances de toute l'équipe."
-            : "En tant qu'opérateur, vous ne voyez que vos propres données. Vos statistiques ne sont visibles que par vous et l'administrateur."}
-        </p>
+      <div className="p-6 bg-white rounded-3xl border border-slate-200 shadow-sm italic text-slate-500 text-[10px] text-center">
+        L'IA analyse les tendances de vos lots pour optimiser vos marges opérationnelles.
       </div>
     </div>
   );

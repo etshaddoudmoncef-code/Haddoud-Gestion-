@@ -1,15 +1,14 @@
-
 export type UserRole = 'ADMIN' | 'OPERATOR';
 export type MainTab = 'production' | 'prestation_prod' | 'prestation_etuvage' | 'stock' | 'insights' | 'management';
 
 export interface User {
   id: string;
   name: string;
-  username: string; // Identifiant de connexion
-  password: string; // Mot de passe
+  username: string;
+  password: string;
   role: UserRole;
   createdAt: number;
-  allowedTabs: MainTab[]; // Onglets autorisés pour cet utilisateur
+  allowedTabs: MainTab[];
 }
 
 export interface MasterData {

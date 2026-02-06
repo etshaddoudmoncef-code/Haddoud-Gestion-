@@ -1,15 +1,14 @@
-
 import React, { useState, useEffect } from 'react';
 import { ProductionRecord, MasterData } from '../types.ts';
 
-interface RecordFormProps {
+interface Props {
   onSubmit: (record: Omit<ProductionRecord, 'id' | 'timestamp' | 'userId' | 'userName'>) => void;
   masterData: MasterData;
   initialData?: ProductionRecord;
 }
 
-const RecordForm: React.FC<RecordFormProps> = ({ onSubmit, masterData, initialData }) => {
-  const [formData, setFormData] = useState({
+const RecordForm: React.FC<Props> = ({ onSubmit, masterData, initialData }) => {
+  const [form, setForm] = useState({
     date: new Date().toISOString().split('T')[0],
     lotNumber: '',
     clientName: masterData.clients[0] || '',
@@ -23,121 +22,70 @@ const RecordForm: React.FC<RecordFormProps> = ({ onSubmit, masterData, initialDa
   });
 
   useEffect(() => {
-    if (initialData) {
-      setFormData({
-        date: initialData.date,
-        lotNumber: initialData.lotNumber,
-        clientName: initialData.clientName,
-        productName: initialData.productName,
-        packaging: initialData.packaging,
-        employeeCount: initialData.employeeCount,
-        totalProduction: initialData.totalProduction,
-        totalWeightKg: initialData.totalWeightKg,
-        wasteKg: initialData.wasteKg,
-        infestationRate: initialData.infestationRate
-      });
-    }
+    if (initialData) setForm({ ...initialData });
   }, [initialData]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.clientName || !formData.lotNumber) {
-      alert("Veuillez renseigner le client et le numéro de lot.");
-      return;
-    }
-    onSubmit(formData);
-    if (!initialData) {
-      setFormData(prev => ({
-        ...prev,
-        totalProduction: 0,
-        totalWeightKg: 0,
-        wasteKg: 0,
-        infestationRate: 0
-      }));
-    }
+    if (!form.lotNumber) return alert("Lot requis");
+    onSubmit(form);
   };
 
-  return (
-    <form onSubmit={handleSubmit} className={`space-y-4 bg-white p-6 rounded-3xl shadow-sm border animate-in fade-in duration-300 ${initialData ? 'border-amber-200 shadow-amber-50' : 'border-slate-100'}`}>
-      <div className="flex justify-between items-center mb-2">
-        <h2 className="text-lg font-black text-slate-800">{initialData ? 'Modification de Production' : 'Saisie de Production'}</h2>
-        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${initialData ? 'bg-amber-100 text-amber-600' : 'bg-blue-100 text-blue-600'}`}>
-          {initialData ? 'Mode Édition' : 'Session de travail'}
-        </span>
-      </div>
+  const inputClass = "w-full bg-slate-100 border-none rounded-2xl px-5 py-4 text-sm font-bold focus:ring-2 focus:ring-blue-600 outline-none transition-all";
+  const labelClass = "block text-[10px] font-black text-slate-400 uppercase mb-1.5 ml-1";
 
+  return (
+    <form onSubmit={handleSubmit} className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-200 space-y-6 animate-in zoom-in-95 duration-300">
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-xs font-bold text-slate-400 uppercase mb-1 ml-1">Date</label>
-          <input type="date" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} required />
+          <label className={labelClass}>Date</label>
+          <input type="date" className={inputClass} value={form.date} onChange={e => setForm({...form, date: e.target.value})} required />
         </div>
         <div>
-          <label className="block text-xs font-bold text-slate-400 uppercase mb-1 ml-1">Numéro de Lot</label>
-          <input 
-            type="text" 
-            placeholder="Ex: LOT-24-001" 
-            className="w-full bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 text-sm font-black text-blue-800 focus:ring-2 focus:ring-blue-500 outline-none" 
-            value={formData.lotNumber} 
-            onChange={e => setFormData({...formData, lotNumber: e.target.value.toUpperCase()})} 
-            required 
-          />
+          <label className={labelClass}>Numéro de Lot</label>
+          <input type="text" className={inputClass + " uppercase text-blue-600"} placeholder="LOT-XXXX" value={form.lotNumber} onChange={e => setForm({...form, lotNumber: e.target.value})} required />
         </div>
       </div>
-      
+
       <div>
-        <label className="block text-xs font-bold text-slate-400 uppercase mb-1 ml-1">Client Destinataire</label>
-        <select 
-          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
-          value={formData.clientName}
-          onChange={e => setFormData({...formData, clientName: e.target.value})}
-          required
-        >
+        <label className={labelClass}>Client</label>
+        <select className={inputClass} value={form.clientName} onChange={e => setForm({...form, clientName: e.target.value})}>
           {masterData.clients.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-xs font-bold text-slate-400 uppercase mb-1 ml-1">Produit</label>
-          <select className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium" value={formData.productName} onChange={e => setFormData({...formData, productName: e.target.value})} required>
+          <label className={labelClass}>Produit</label>
+          <select className={inputClass} value={form.productName} onChange={e => setForm({...form, productName: e.target.value})}>
             {masterData.products.map(p => <option key={p} value={p}>{p}</option>)}
           </select>
         </div>
         <div>
-          <label className="block text-xs font-bold text-slate-400 uppercase mb-1 ml-1">Emballage</label>
-          <select className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium" value={formData.packaging} onChange={e => setFormData({...formData, packaging: e.target.value})} required>
+          <label className={labelClass}>Emballage</label>
+          <select className={inputClass} value={form.packaging} onChange={e => setForm({...form, packaging: e.target.value})}>
             {masterData.packagings.map(p => <option key={p} value={p}>{p}</option>)}
           </select>
         </div>
       </div>
 
-      <div>
-        <label className="block text-xs font-bold text-slate-400 uppercase mb-1 ml-1">Effectif (Employés)</label>
-        <input type="number" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold" value={formData.employeeCount || ''} onChange={e => setFormData({...formData, employeeCount: parseInt(e.target.value) || 0})} required />
-      </div>
-
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-3 gap-4">
         <div>
-          <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">Unités</label>
-          <input type="number" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-3 text-sm font-bold" value={formData.totalProduction || ''} onChange={e => setFormData({...formData, totalProduction: parseInt(e.target.value) || 0})} required />
+          <label className={labelClass}>Employés</label>
+          <input type="number" className={inputClass} value={form.employeeCount || ''} onChange={e => setForm({...form, employeeCount: parseInt(e.target.value) || 0})} required />
         </div>
         <div>
-          <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">Poids Brut (Kg)</label>
-          <input type="number" step="0.1" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-3 text-sm font-bold" value={formData.totalWeightKg || ''} onChange={e => setFormData({...formData, totalWeightKg: parseFloat(e.target.value) || 0})} required />
+          <label className={labelClass}>Poids Brut (Kg)</label>
+          <input type="number" step="0.1" className={inputClass} value={form.totalWeightKg || ''} onChange={e => setForm({...form, totalWeightKg: parseFloat(e.target.value) || 0})} required />
         </div>
         <div>
-          <label className="block text-[10px] font-bold text-red-400 uppercase mb-1 ml-1">Pertes (Kg)</label>
-          <input type="number" step="0.1" className="w-full bg-red-50 border border-red-100 rounded-xl px-3 py-3 text-sm font-bold text-red-600" value={formData.wasteKg || ''} onChange={e => setFormData({...formData, wasteKg: parseFloat(e.target.value) || 0})} required />
+          <label className={labelClass}>Pertes (Kg)</label>
+          <input type="number" step="0.1" className={inputClass + " text-red-500"} value={form.wasteKg || ''} onChange={e => setForm({...form, wasteKg: parseFloat(e.target.value) || 0})} required />
         </div>
       </div>
 
-      <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-        <label className="block text-xs font-bold text-slate-400 uppercase mb-2 ml-1">Taux d'Infestation : <span className="text-blue-600">{formData.infestationRate}%</span></label>
-        <input type="range" min="0" max="100" step="0.5" className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600" value={formData.infestationRate} onChange={e => setFormData({...formData, infestationRate: parseFloat(e.target.value)})} />
-      </div>
-
-      <button type="submit" className={`w-full text-white font-black py-4 rounded-2xl shadow-lg uppercase tracking-widest text-xs mt-4 transition-all active:scale-95 ${initialData ? 'bg-amber-600 hover:bg-amber-700' : 'bg-blue-600 hover:bg-blue-700'}`}>
-        {initialData ? 'Mettre à jour la production' : 'Valider la production'}
+      <button type="submit" className="w-full bg-slate-900 text-white font-black py-5 rounded-[2rem] shadow-xl text-[10px] uppercase tracking-widest active:scale-95 transition-all">
+        {initialData ? 'Mettre à jour' : 'Enregistrer la production'}
       </button>
     </form>
   );
