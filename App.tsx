@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { ProductionRecord, PurchaseRecord, StockOutRecord, PrestationProdRecord, PrestationEtuvageRecord, User, MasterData, MainTab } from './types.ts';
 import Layout from './components/Layout.tsx';
@@ -12,6 +11,14 @@ import StockModule from './components/StockModule.tsx';
 import LotTraceability from './components/LotTraceability.tsx';
 import PrestationProdModule from './components/PrestationProdModule.tsx';
 import PrestationEtuvageModule from './components/PrestationEtuvageModule.tsx';
+
+// Générateur d'ID robuste pour Android (Fallback si crypto.randomUUID est absent)
+export const generateId = () => {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return Date.now().toString(36) + Math.random().toString(36).substring(2);
+};
 
 const DEFAULT_MASTER_DATA: MasterData = {
   products: ['Tomate (Roma)', 'Poivron (Rouge)', 'Concombre'],
@@ -112,7 +119,7 @@ const App: React.FC = () => {
 
   const handleAddRecord = (data: Omit<ProductionRecord, 'id' | 'timestamp' | 'userId' | 'userName'>) => {
     if (!currentUser) return;
-    const newRecord: ProductionRecord = { ...data, id: crypto.randomUUID(), userId: currentUser.id, userName: currentUser.name, timestamp: Date.now() };
+    const newRecord: ProductionRecord = { ...data, id: generateId(), userId: currentUser.id, userName: currentUser.name, timestamp: Date.now() };
     setAllRecords(prev => [...prev, newRecord]);
     setProdSubTab('history');
   };
@@ -179,7 +186,7 @@ const App: React.FC = () => {
           <PrestationProdModule 
             records={allPrestationProd} 
             masterData={masterData} 
-            onAdd={(d) => setAllPrestationProd(p => [...p, { ...d, id: crypto.randomUUID(), userId: currentUser.id, userName: currentUser.name, timestamp: Date.now() }])} 
+            onAdd={(d) => setAllPrestationProd(p => [...p, { ...d, id: generateId(), userId: currentUser.id, userName: currentUser.name, timestamp: Date.now() }])} 
             onUpdate={(id, d) => setAllPrestationProd(p => p.map(r => r.id === id ? { ...r, ...d } : r))}
             onDelete={(id) => setAllPrestationProd(p => p.filter(r => r.id !== id))} 
             isAdmin={currentUser.role === 'ADMIN'} 
@@ -190,7 +197,7 @@ const App: React.FC = () => {
           <PrestationEtuvageModule 
             records={allPrestationEtuvage} 
             masterData={masterData} 
-            onAdd={(d) => setAllPrestationEtuvage(p => [...p, { ...d, id: crypto.randomUUID(), userId: currentUser.id, userName: currentUser.name, timestamp: Date.now() }])} 
+            onAdd={(d) => setAllPrestationEtuvage(p => [...p, { ...d, id: generateId(), userId: currentUser.id, userName: currentUser.name, timestamp: Date.now() }])} 
             onUpdate={(id, d) => setAllPrestationEtuvage(p => p.map(r => r.id === id ? { ...r, ...d } : r))}
             onDelete={(id) => setAllPrestationEtuvage(p => p.filter(r => r.id !== id))} 
             isAdmin={currentUser.role === 'ADMIN'} 
@@ -202,8 +209,8 @@ const App: React.FC = () => {
             purchases={allPurchases} 
             stockOuts={allStockOuts} 
             masterData={masterData} 
-            onAddPurchase={(d) => setAllPurchases(p => [...p, { ...d, id: crypto.randomUUID(), userId: currentUser.id, userName: currentUser.name, timestamp: Date.now() }])} 
-            onAddStockOut={(d) => setAllStockOuts(s => [...s, { ...d, id: crypto.randomUUID(), userId: currentUser.id, userName: currentUser.name, timestamp: Date.now() }])} 
+            onAddPurchase={(d) => setAllPurchases(p => [...p, { ...d, id: generateId(), userId: currentUser.id, userName: currentUser.name, timestamp: Date.now() }])} 
+            onAddStockOut={(d) => setAllStockOuts(s => [...s, { ...d, id: generateId(), userId: currentUser.id, userName: currentUser.name, timestamp: Date.now() }])} 
             onUpdatePurchase={(id, d) => setAllPurchases(p => p.map(r => r.id === id ? { ...r, ...d } : r))}
             onUpdateStockOut={(id, d) => setAllStockOuts(s => s.map(r => r.id === id ? { ...r, ...d } : r))}
             onDeletePurchase={(id) => setAllPurchases(p => p.filter(r => r.id !== id))} 

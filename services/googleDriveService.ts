@@ -2,7 +2,7 @@
  * Service de synchronisation Google Drive pour Ets Haddoud Moncef.
  */
 
-const CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com'; // À remplacer par le vrai Client ID
+const CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
 const SCOPES = 'https://www.googleapis.com/auth/drive.file';
 const BACKUP_FILENAME = 'Haddoud_Moncef_Management_Backup.json';
 
@@ -15,10 +15,20 @@ let gisInited = false;
  */
 export const initGoogleDriveApi = () => {
   return new Promise<void>((resolve, reject) => {
+    // Timeout de sécurité pour ne pas bloquer l'app si les scripts Google ne chargent jamais
+    const timeout = setTimeout(() => {
+      console.warn("Google Drive API initialization timed out.");
+      resolve(); 
+    }, 10000);
+
     try {
-      // Charger le client GAPI
       const gapi = (window as any).gapi;
-      if (!gapi) return;
+      if (!gapi) {
+        console.warn("GAPI script not found yet.");
+        clearTimeout(timeout);
+        resolve();
+        return;
+      }
 
       gapi.load('client', async () => {
         try {
@@ -29,11 +39,10 @@ export const initGoogleDriveApi = () => {
           checkInitialization();
         } catch (e) {
           console.error("Erreur gapi init", e);
-          reject(e);
+          resolve(); // On résout quand même pour ne pas bloquer l'UI
         }
       });
 
-      // Initialiser le client GIS (Google Identity Services)
       const checkGoogleInterval = setInterval(() => {
         const google = (window as any).google;
         if (google && google.accounts && google.accounts.oauth2) {
@@ -41,7 +50,7 @@ export const initGoogleDriveApi = () => {
           tokenClient = google.accounts.oauth2.initTokenClient({
             client_id: CLIENT_ID,
             scope: SCOPES,
-            callback: '', // défini lors de l'appel
+            callback: '', 
           });
           gisInited = true;
           checkInitialization();
@@ -50,18 +59,18 @@ export const initGoogleDriveApi = () => {
 
       function checkInitialization() {
         if (gapiInited && gisInited) {
+          clearTimeout(timeout);
           resolve();
         }
       }
     } catch (err) {
-      reject(err);
+      console.error("Critical Google Drive init error:", err);
+      clearTimeout(timeout);
+      resolve();
     }
   });
 };
 
-/**
- * Obtient un jeton d'accès et exécute une action.
- */
 const withAuth = (action: (token: string) => Promise<void>) => {
   return new Promise<void>((resolve, reject) => {
     if (!tokenClient) {
@@ -83,7 +92,7 @@ const withAuth = (action: (token: string) => Promise<void>) => {
     };
 
     const gapi = (window as any).gapi;
-    if (gapi.client.getToken() === null) {
+    if (!gapi || !gapi.client || gapi.client.getToken() === null) {
       tokenClient.requestAccessToken({ prompt: 'consent' });
     } else {
       tokenClient.requestAccessToken({ prompt: '' });
@@ -91,9 +100,6 @@ const withAuth = (action: (token: string) => Promise<void>) => {
   });
 };
 
-/**
- * Sauvegarde les données locales sur Google Drive.
- */
 export const saveToGoogleDrive = async () => {
   const dataToSave = {
     prod_users: localStorage.getItem('prod_users'),
@@ -103,26 +109,18 @@ export const saveToGoogleDrive = async () => {
     prod_purchases: localStorage.getItem('prod_purchases'),
     prod_stock_outs: localStorage.getItem('prod_stock_outs'),
     prod_master_data: localStorage.getItem('prod_master_data'),
-    exportDate: new Date().toISOString(),
-    accountHint: 'ets.haddoudmoncef@gmail.com'
+    exportDate: new Date().toISOString()
   };
 
   await withAuth(async (token) => {
-    // 1. Rechercher si le fichier existe déjà
     const response = await fetch(
       `https://www.googleapis.com/drive/v3/files?q=name='${BACKUP_FILENAME}'&fields=files(id)`,
-      {
-        headers: { Authorization: `Bearer ${token}` }
-      }
+      { headers: { Authorization: `Bearer ${token}` } }
     );
     const searchResult = await response.json();
     const existingFile = searchResult.files && searchResult.files[0];
 
-    const metadata = {
-      name: BACKUP_FILENAME,
-      mimeType: 'application/json'
-    };
-
+    const metadata = { name: BACKUP_FILENAME, mimeType: 'application/json' };
     const form = new FormData();
     form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
     form.append('file', new Blob([JSON.stringify(dataToSave)], { type: 'application/json' }));
@@ -141,42 +139,27 @@ export const saveToGoogleDrive = async () => {
       body: form
     });
 
-    if (!uploadResponse.ok) {
-      throw new Error('Échec de l\'envoi vers Google Drive');
-    }
+    if (!uploadResponse.ok) throw new Error('Échec de l\'envoi vers Google Drive');
   });
 };
 
-/**
- * Restaure les données depuis Google Drive.
- */
 export const restoreFromGoogleDrive = async () => {
   let finalData: any = null;
-
   await withAuth(async (token) => {
-    // 1. Rechercher le fichier
     const searchResponse = await fetch(
       `https://www.googleapis.com/drive/v3/files?q=name='${BACKUP_FILENAME}'&fields=files(id)`,
-      {
-        headers: { Authorization: `Bearer ${token}` }
-      }
+      { headers: { Authorization: `Bearer ${token}` } }
     );
     const searchResult = await searchResponse.json();
     const file = searchResult.files && searchResult.files[0];
 
-    if (!file) {
-      throw new Error('Aucun fichier de sauvegarde trouvé sur Google Drive.');
-    }
+    if (!file) throw new Error('Aucun fichier trouvé.');
 
-    // 2. Télécharger le contenu
     const downloadResponse = await fetch(
       `https://www.googleapis.com/drive/v3/files/${file.id}?alt=media`,
-      {
-        headers: { Authorization: `Bearer ${token}` }
-      }
+      { headers: { Authorization: `Bearer ${token}` } }
     );
     finalData = await downloadResponse.json();
   });
-
   return finalData;
 };

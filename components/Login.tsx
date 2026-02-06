@@ -1,6 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { User, UserRole, MainTab } from '../types.ts';
+import { generateId } from '../App.tsx';
 
 interface LoginProps {
   onLogin: (user: User) => void;
@@ -17,7 +17,6 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     return saved ? JSON.parse(saved) : [];
   });
 
-  // Si aucun utilisateur n'existe, on force le mode inscription pour l'Admin
   useEffect(() => {
     if (allUsers.length === 0) {
       setMode('register');
@@ -55,8 +54,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     }
 
     const newUser: User = {
-      id: crypto.randomUUID(),
-      name: username.trim(), // Utilise l'identifiant comme nom d'affichage par défaut
+      id: generateId(),
+      name: username.trim(),
       username: username.trim().toLowerCase(),
       password: password,
       role: 'ADMIN',
