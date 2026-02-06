@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { PrestationEtuvageRecord, MasterData } from '../types.ts';
 
@@ -232,7 +231,6 @@ const PrestationEtuvageForm = ({ onSubmit, masterData, initialData }: { onSubmit
             className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-black" 
             placeholder="0.0"
             value={formData.weightIn || ''} 
-            // Fix: Added 'e =>' to the onChange handler to pass event correctly
             onChange={e => updateAmount(parseFloat(e.target.value) || 0, formData.unitPrice)} 
             required 
           />
@@ -258,7 +256,6 @@ const PrestationEtuvageForm = ({ onSubmit, masterData, initialData }: { onSubmit
         <div>
           <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Prix/Kg (DA)</label>
           <input type="number" step="0.01" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm" value={formData.unitPrice || ''} 
-            // Fix: Added 'e =>' to the onChange handler to pass event correctly and avoid immediate execution
             onChange={e => updateAmount(formData.weightIn, parseFloat(e.target.value) || 0)} required />
         </div>
         <div>
