@@ -8,9 +8,21 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#0f172a">
   <link rel="manifest" href="manifest.json">
+  
+  <!-- Scripts Google API pour la synchronisation Drive -->
+  <script src="https://apis.google.com/js/api.js" async defer></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
+    // Configuration globale de l'environnement
     window.process = { env: { API_KEY: "" } };
+    
+    // Catch global pour débogage Android
+    window.onerror = function(msg, url, lineNo, columnNo, error) {
+      console.error('Erreur Globale: ', msg, ' à ', url, ':', lineNo);
+      return false;
+    };
   </script>
   <style>
     body { background-color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
@@ -18,18 +30,18 @@
     #root { min-height: 100vh; }
   </style>
   <script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@19.0.0",
-    "react-dom": "https://esm.sh/react-dom@19.0.0",
-    "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
-    "recharts": "https://esm.sh/recharts@2.15.0?deps=react@19.0.0,react-dom@19.0.0",
-    "@google/genai": "https://esm.sh/@google/genai@1.39.0",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
-    "react/": "https://esm.sh/react@^19.2.4/"
+  {
+    "imports": {
+      "react": "https://esm.sh/react@19.0.0",
+      "react-dom": "https://esm.sh/react-dom@19.0.0",
+      "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
+      "recharts": "https://esm.sh/recharts@2.15.0?deps=react@19.0.0,react-dom@19.0.0",
+      "@google/genai": "https://esm.sh/@google/genai@1.39.0",
+      "react/": "https://esm.sh/react@19.0.0/",
+      "react-dom/": "https://esm.sh/react-dom@19.0.0/"
+    }
   }
-}
-</script>
+  </script>
 </head>
 <body class="antialiased">
   <div id="root"></div>
