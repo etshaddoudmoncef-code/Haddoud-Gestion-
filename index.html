@@ -14,18 +14,38 @@
   
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    // Shim indispensable pour le SDK Google GenAI
+    // Configuration globale et Shim
     window.process = { env: { API_KEY: "" } };
+
+    // Capture des erreurs fatales avant le chargement des modules
+    window.onerror = function(msg, url, lineNo, columnNo, error) {
+      var display = document.getElementById('error-display');
+      var text = document.getElementById('error-text');
+      if (display && text) {
+        display.style.display = 'block';
+        text.innerText = "Erreur Système : " + msg + (lineNo ? " (Ligne: " + lineNo + ")" : "");
+      }
+      return false;
+    };
+
+    window.onunhandledrejection = function(event) {
+      var display = document.getElementById('error-display');
+      var text = document.getElementById('error-text');
+      if (display && text) {
+        display.style.display = 'block';
+        text.innerText = "Erreur de chargement : " + (event.reason || "Échec réseau");
+      }
+    };
   </script>
 
   <style>
     body {
       background-color: #f8fafc;
       -webkit-tap-highlight-color: transparent;
-      user-select: none;
       margin: 0;
       padding: 0;
       min-height: 100vh;
+      font-family: sans-serif;
     }
     #root {
       min-height: 100vh;
@@ -40,6 +60,7 @@
       -ms-overflow-style: none;
       scrollbar-width: none;
     }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 
   <script type="importmap">
@@ -62,19 +83,17 @@
 </head>
 <body>
   <div id="root">
-    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: sans-serif; color: #64748b; padding: 20px; text-align: center;">
+    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; color: #64748b; padding: 20px; text-align: center;">
       <div style="width: 40px; height: 40px; border: 3px solid #e2e8f0; border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-      <p style="margin-top: 16px; font-weight: 700; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;">Initialisation du système...</p>
-      <div id="error-display" style="margin-top: 20px; padding: 15px; border-radius: 12px; background: #fee2e2; border: 1px solid #fecaca; color: #991b1b; font-size: 11px; display: none; text-align: left; max-width: 90%;">
-        <p style="font-weight: 900; margin-bottom: 5px; text-transform: uppercase;">⚠️ Erreur Fatale :</p>
-        <p id="error-text"></p>
+      <p style="margin-top: 16px; font-weight: 700; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;">Initialisation Haddoud...</p>
+      
+      <div id="error-display" style="margin-top: 25px; padding: 15px; border-radius: 16px; background: #fff1f2; border: 1px solid #fecaca; color: #991b1b; font-size: 11px; display: none; text-align: left; max-width: 320px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+        <p style="font-weight: 900; margin-bottom: 5px; text-transform: uppercase;">⚠️ Problème détecté :</p>
+        <p id="error-text" style="font-family: monospace; line-height: 1.4;"></p>
+        <button onclick="window.location.reload()" style="margin-top: 10px; width: 100%; background: #ef4444; color: white; border: none; padding: 8px; border-radius: 8px; font-weight: bold; cursor: pointer;">Réessayer</button>
       </div>
     </div>
   </div>
-
-  <style>
-    @keyframes spin { to { transform: rotate(360deg); } }
-  </style>
 
   <script type="module" src="./index.tsx"></script>
 </body>
