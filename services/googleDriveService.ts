@@ -6,7 +6,7 @@ const CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com'; // À remp
 const SCOPES = 'https://www.googleapis.com/auth/drive.file';
 const BACKUP_FILENAME = 'Haddoud_Moncef_Management_Backup.json';
 
-let tokenClient: any;
+let tokenClient: any = null;
 let gapiInited = false;
 let gisInited = false;
 
@@ -17,9 +17,12 @@ export const initGoogleDriveApi = () => {
   return new Promise<void>((resolve, reject) => {
     try {
       // Charger le client GAPI
-      (window as any).gapi.load('client', async () => {
+      const gapi = (window as any).gapi;
+      if (!gapi) return;
+
+      gapi.load('client', async () => {
         try {
-          await (window as any).gapi.client.init({
+          await gapi.client.init({
             discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
           });
           gapiInited = true;
@@ -31,11 +34,11 @@ export const initGoogleDriveApi = () => {
       });
 
       // Initialiser le client GIS (Google Identity Services)
-      // On vérifie que window.google est disponible avant d'appeler
       const checkGoogleInterval = setInterval(() => {
-        if ((window as any).google && (window as any).google.accounts) {
+        const google = (window as any).google;
+        if (google && google.accounts && google.accounts.oauth2) {
           clearInterval(checkGoogleInterval);
-          tokenClient = (window as any).google.accounts.oauth2.initTokenClient({
+          tokenClient = google.accounts.oauth2.initTokenClient({
             client_id: CLIENT_ID,
             scope: SCOPES,
             callback: '', // défini lors de l'appel
@@ -43,7 +46,7 @@ export const initGoogleDriveApi = () => {
           gisInited = true;
           checkInitialization();
         }
-      }, 100);
+      }, 500);
 
       function checkInitialization() {
         if (gapiInited && gisInited) {
@@ -79,7 +82,8 @@ const withAuth = (action: (token: string) => Promise<void>) => {
       }
     };
 
-    if ((window as any).gapi.client.getToken() === null) {
+    const gapi = (window as any).gapi;
+    if (gapi.client.getToken() === null) {
       tokenClient.requestAccessToken({ prompt: 'consent' });
     } else {
       tokenClient.requestAccessToken({ prompt: '' });
